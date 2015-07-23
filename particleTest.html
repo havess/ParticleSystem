@@ -1,0 +1,76 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<link rel="stylesheet" href="bootstrap.css">
+		<link rel="stylesheet" href="bootstrap-theme.css">
+		<link rel="stylesheet" href="main.css">
+  </head>
+  <body>	
+  	<div class="mode">
+		Current mode: add
+	</div>
+
+  	<div class="Menu-hidden">
+  		<button type="button" class="btn btn-default" aria-label="Left Align">Menu</button>
+  	</div>
+
+  	<div class = "Reset">
+  		<button type="button" class="btn btn-default" aria-label="Left Align">Reset</button>
+  	</div>
+
+	<div class="Particle-menu">
+		<h1> <em><strong>Particle System</strong></em></h1>
+		<h2>Instructions: </h2>
+		<ol>
+			<li>Press a to switch to add mode</li>
+			<li>Press s to swtich to remove mode</li>
+			<li>Press d to switch to modify (currently not implemented, sorry)</li>
+			<li>Press space bar to toggle menu</li>
+			<li>Press c to cycle through types</li>
+		</ol>
+		<h3>Type:
+		 	<div id="typeDrop" class="dropdown">
+			  <button class="btn btn-success dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+			    <span id="charge">Positive</span>
+			    <span class="caret"></span>
+			  </button>
+			
+			  <ul id = "fieldDropdown" class="dropdown-menu" aria-labelledby="dropdownMenu1">
+			    <li><a href="#">Positive</a></li>
+			    <li><a href="#">Negative</a></li>
+			    <li><a href="#">Emitter</a></li>
+			  </ul>
+			</div>
+		</h3>
+
+		<h3>Field Mass (defaulted to 150):
+		 	<div class="form-group">
+			  <input id="mass" type="text" class="form-control" id="usr">
+			</div>
+		</h3>
+
+		<h3>Max # of Particles (defaulted to 20 000):
+		 	<div class="form-group">
+			  <input id="particles" type="text" class="form-control" id="usr">
+			</div>
+		</h3>
+
+		<h3>Emission Rate (defaulted to 20/update):
+		 	<div class="form-group">
+			  <input id="emission" type="text" class="form-control" id="usr">
+			</div>
+		</h3>
+	</div>
+
+    <canvas></canvas>
+
+     <script src="jquery-1.11.3.min.js"></script>
+	 <!-- Bootstrap -->
+	<script src="bootstrap.min.js"></script>
+    
+    <script src="particleTest.js"></script>
+
+	   
+  </body>
+</html>
