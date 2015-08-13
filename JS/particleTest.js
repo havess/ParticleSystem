@@ -23,7 +23,9 @@ var dMaxParticles = 20000,
 var onClickType = 0;
 var btnClass = "btn-default";
 var lineRequested;
+var modifyRequest;
 var foundObject;
+var selectedObject = null;
 var placeEmitter;
 var mode = "add"; 
 
@@ -76,6 +78,44 @@ $(".Menu-hidden").on('click', function(e){
 $(".Reset").on('click', function(e){
     reset();
 });
+
+$("canvas").click(function(e){
+    e.preventDefault();
+    scrollHeightOffset = $(document).scrollTop();
+    if(mode == "add"){
+        if(onClickType === 0){
+            fields.push(new Field(new Vector(e.clientX - canvas.getBoundingClientRect().left, e.clientY + scrollHeightOffset), getMass()));
+        }else if(onClickType === 1){
+            fields.push(new Field(new Vector(e.clientX- canvas.getBoundingClientRect().left, e.clientY + scrollHeightOffset), -getMass()));
+        }else{
+            if(!lineRequested){
+                eX = e.clientX;
+                eY = e.clientY;
+                lineRequested = true;
+            }else{
+                lineRequested = false;
+                emitters.push(new Emitter(new Vector(eX, eY), Vector.fromAngle(getAngle(), 2)));
+            }
+        }
+    }else if(mode == "remove"){
+        removeObject();
+    }
+});
+
+$("canvas").on("mousedown", function(e){
+    e.preventDefault();
+    if(mode == "modify"){
+        modifyRequest = true;
+    }
+});
+
+$("canvas").on("mouseup", function(e){
+    e.preventDefault();
+    if(modifyRequest){
+        modifyRequest = false;
+        selectedObject = null;
+    }
+})
 
 $("canvas").mousemove(function(e){
       window.mouseXPos = e.pageX;
@@ -141,29 +181,6 @@ function getEmissionRate(){
 function resize(){
     canvas.width = $("canvas").width();
     canvas.height = window.innerHeight;   
-}
-
-canvas.onclick = function (e) {
-    e.preventDefault();
-    scrollHeightOffset = $(document).scrollTop();
-    if(mode == "add"){
-        if(onClickType === 0){
-            fields.push(new Field(new Vector(e.clientX - canvas.getBoundingClientRect().left, e.clientY + scrollHeightOffset), getMass()));
-        }else if(onClickType === 1){
-            fields.push(new Field(new Vector(e.clientX- canvas.getBoundingClientRect().left, e.clientY + scrollHeightOffset), -getMass()));
-        }else{
-            if(!lineRequested){
-                eX = e.clientX;
-                eY = e.clientY;
-                lineRequested = true;
-            }else{
-                lineRequested = false;
-                emitters.push(new Emitter(new Vector(eX, eY), Vector.fromAngle(getAngle(), 2)));
-            }
-        }
-    }else if(mode == "remove"){
-        removeObject();
-    }
 }
 
 function getAngle(){
@@ -236,6 +253,7 @@ Particle.prototype.move = function () {
 function Field(point, mass) {
     this.position = point;
     this.setMass(mass);
+    this.modify = false;
 }
 
 Field.prototype.setMass = function (mass) {
@@ -327,7 +345,6 @@ function removeObject(){
 
         }
     }
-
     if(!foundObject){
         for(var i = 0; i < emitters.length; i++){
             var p = emitters[i];
@@ -340,13 +357,38 @@ function removeObject(){
     foundObject = false;
 }
 
+function getObject(){
+    if(modifyRequest && selectedObject === null){
+        for(var i = 0; i < fields.length; i++){
+            var p = fields[i];
+            if(isMouseOver(p)){
+                selectedObject = p;
+            }
+        }
+        for(var i = 0; i < emitters.length; i++){
+            var p = emitters[i];
+            if(isMouseOver(p)){
+                selectedObject = p;
+            }
+        }
+        return selectedObject;
+    }else{
+        return selectedObject;
+    }
+}
+
 function drawCircle(object) {
     ctx.fillStyle = object.drawColor;
     ctx.beginPath();
+    if(modifyRequest && object.position === getObject().position){
+        object.position.x = mouseXPos;
+        object.position.y = mouseYPos;
+    }
     ctx.arc(object.position.x, object.position.y, objectSize, 0, Math.PI * 2);
     ctx.closePath();
     ctx.fill();
 }
+
 function drawLine(){
     ctx.beginPath();
     ctx.moveTo(eX, eY);
