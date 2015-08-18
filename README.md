@@ -6,7 +6,9 @@ attraction and - for repulsion). Their force is calculated simply by dividing th
 
 <h4> Things to do </h4>
 <ol>
-  <li> Complete modify functionality </li>
+  <li> <strike> Complete modify functionality </strike> </li>
+  <li> <strike> Add music </strike> <li>
+  <li> Add choose your own songs + beat analysing visual </li>
   <li> Add mouse over window with modyfiable values for fields </li>
   <li> Create cool as hell demos </li>
 </ol>
