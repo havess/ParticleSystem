@@ -7,6 +7,10 @@
 		<link rel="stylesheet" href="CSS/main.css">
   </head>
   <body>	
+
+  	<audio id="song" src="Songs/bNow.mp3 " preload="auto">
+  		<p>Your browser does not support the <code> audio </code> element</p>
+  	</audio>
   	<div class="mode">
 		Current mode: add
 	</div>
@@ -21,14 +25,16 @@
 
 	<div class="Particle-menu">
 		<h1> <em><strong>Particle System</strong></em></h1>
-		<h2>Instructions: </h2>
-		<ol>
-			<li>Press a to switch to add mode</li>
-			<li>Press s to swtich to remove mode</li>
-			<li>Press d to switch to modify</li>
-			<li>Press space bar to toggle menu</li>
-			<li>Press c to cycle through types</li>
-		</ol>
+		<h2 id="Instructions-Label">Instructions &#8595</h2>
+		<div class="Instructions">
+			<ol>
+				<li>Press a to switch to add mode</li>
+				<li>Press s to swtich to remove mode</li>
+				<li>Press d to switch to modify</li>
+				<li>Press space bar to toggle menu</li>
+				<li>Press c to cycle through types</li>
+			</ol>
+		</div>
 		<h3>Type:
 		 	<div id="typeDrop" class="dropdown">
 			  <button class="btn btn-success dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
@@ -40,23 +46,24 @@
 			    <li><a href="#">Positive</a></li>
 			    <li><a href="#">Negative</a></li>
 			    <li><a href="#">Emitter</a></li>
+			    <li><a href="#">Song Node</a><li>
 			  </ul>
 			</div>
 		</h3>
 
-		<h3>Field Mass (defaulted to 150):
+		<h3>Field Mass:
 		 	<div class="form-group">
 			  <input id="mass" type="text" class="form-control" id="usr">
 			</div>
 		</h3>
 
-		<h3>Max # of Particles (defaulted to 20 000):
+		<h3>Max # of Particles:
 		 	<div class="form-group">
 			  <input id="particles" type="text" class="form-control" id="usr">
 			</div>
 		</h3>
 
-		<h3>Emission Rate (defaulted to 20/update):
+		<h3>Emission Rate:
 		 	<div class="form-group">
 			  <input id="emission" type="text" class="form-control" id="usr">
 			</div>

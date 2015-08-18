@@ -7,9 +7,12 @@ $(function() {
 var particles = [];
 var emitters = []; 
 var fields = [];
+var songNodes = [];
 
 var midX = Math.floor($("canvas").width()/2);
 var midY = $("canvas").height()/2;
+
+var song = document.getElementById("song");
 
 var eX, eY;
 var scrollHeightOffset;
@@ -23,10 +26,10 @@ var dMaxParticles = 20000,
 var onClickType = 0;
 var btnClass = "btn-default";
 var lineRequested;
+var circleRequested;
 var modifyRequest;
 var foundObject;
 var selectedObject = null;
-var placeEmitter;
 var mode = "add"; 
 
 
@@ -44,7 +47,7 @@ $( "html" ).keypress(function( event ) {
   }else if( key == 32){
     $(".Particle-menu").slideToggle(1000);
   }else if(key == 99){
-    if(onClickType != 2){
+    if(onClickType != 3){
        onClickType++; 
     }else{
        onClickType = 0;
@@ -57,14 +60,21 @@ $( "html" ).keypress(function( event ) {
 
 $("#fieldDropdown li").on('click','a',  function(e){
     e.preventDefault();
-    $("#charge").empty().append(this.innerHTML);
-    if((this).innerHTML == "Positive"){
+    var type = $(this).html()
+    $("#charge").empty().append(type);
+    if(type == "Positive"){
         onClickType = 0;
-    }else if((this).innerHTML == "Negative"){
+    }else if(type == "Negative"){
         onClickType = 1;
-    }else if((this).innerHTML == "Emitter"){
+    }else if(type == "Emitter"){
         onClickType = 2;
+    }else if (type == "Song Node"){
+        onClickType = 3;
     }
+});
+
+$("#Instructions-Label").on('click', function (e) {
+    $(".Instructions").slideToggle();
 });
 
 $("#typeDrop").on('click',function(e){
@@ -84,10 +94,10 @@ $("canvas").click(function(e){
     scrollHeightOffset = $(document).scrollTop();
     if(mode == "add"){
         if(onClickType === 0){
-            fields.push(new Field(new Vector(e.clientX - canvas.getBoundingClientRect().left, e.clientY + scrollHeightOffset), getMass()));
+            fields.push(new Field(new Vector(e.clientX - canvas.getBoundingClientRect().left, e.clientY + scrollHeightOffset), Math.abs(getMass())));
         }else if(onClickType === 1){
-            fields.push(new Field(new Vector(e.clientX- canvas.getBoundingClientRect().left, e.clientY + scrollHeightOffset), -getMass()));
-        }else{
+            fields.push(new Field(new Vector(e.clientX- canvas.getBoundingClientRect().left, e.clientY + scrollHeightOffset), -Math.abs(getMass())));
+        }else if (onClickType === 2){
             if(!lineRequested){
                 eX = e.clientX;
                 eY = e.clientY;
@@ -95,6 +105,15 @@ $("canvas").click(function(e){
             }else{
                 lineRequested = false;
                 emitters.push(new Emitter(new Vector(eX, eY), Vector.fromAngle(getAngle(), 2)));
+            }
+        }else if (onClickType === 3){
+            if(!circleRequested){
+                eX = e.clientX;
+                eY = e.clientY;
+                circleRequested = true;
+            }else{
+                circleRequested = false;
+                songNodes.push(new SongNode(new Vector(eX,eY), song, radialDistance(e.clientX - eX, e.clientY - eY)));
             }
         }
     }else if(mode == "remove"){
@@ -123,23 +142,31 @@ $("canvas").mousemove(function(e){
 }); 
 
 function updateDropdown(){
+    var newClass = btnClass
+    var type = $("#charge").html();
+
     switch(onClickType){
         case 0:
-            $("#dropdownMenu1").removeClass(btnClass).addClass("btn-success");
-            btnClass = "btn-success";
-            $("#charge").empty().append("Positive");
+            newClass = "btn-success";
+            type = "Positive";
             break;
         case 1:
-            $("#dropdownMenu1").removeClass(btnClass).addClass("btn-danger");
-            btnClass = "btn-danger";
-            $("#charge").empty().append("Negative");
+            newClass = "btn-danger";
+            type = "Negative"
             break;
         case 2:
-             $("#dropdownMenu1").removeClass(btnClass).addClass("btn-info");
-            btnClass = "btn-info";
-            $("#charge").empty().append("Emitter");
+            newClass = "btn-info";
+            type = "Emitter"
+            break;
+        case 3:
+            newClass = "btn-warning";
+            type = "Song Node";
             break;
     }
+
+    $("#dropdownMenu1").removeClass(btnClass).addClass(newClass);
+    $("#charge").empty().append(type);
+    btnClass = newClass
 }
 
 var canvas = document.querySelector('canvas');
@@ -165,7 +192,12 @@ function getMass(){
     if(val != ""){
         return parseInt(val);
     }else{
-        return dMass;
+        var obj = $("#charge").html()
+        if(obj === "Positive"){
+            return dMass
+        }else{
+            return -dMass
+        }
     }
 }
 
@@ -253,7 +285,6 @@ Particle.prototype.move = function () {
 function Field(point, mass) {
     this.position = point;
     this.setMass(mass);
-    this.modify = false;
 }
 
 Field.prototype.setMass = function (mass) {
@@ -286,13 +317,53 @@ Emitter.prototype.emitParticle = function () {
     return new Particle(position, velocity);
 };
 
-function addNewParticles() {
+function SongNode(point, audioElement , radius, minVolume, maxVolume){
+    this.position = point;//coordinate
+    this.song = audioElement;// file path for audio file
+    this.radius = radius;
+    this.minVolume = minVolume || 400; //number of particles for the file to play.
+    this.maxVolume = maxVolume || 5000; //number of particles needed for max volume
+    this.containedParticles = 0;
+    this.drawColor = "orange";
+}
+
+SongNode.prototype.calcSongState = function(particles){
+    this.containedParticles = 0;
+    for(var i = 0; i < particles.length; i ++){
+        var p = particles[i];
+        var deltaX = p.position.x - this.position.x;
+        var deltaY = p.position.y - this.position.y;
+        if(radialDistance(deltaX, deltaY) <= this.radius){
+            this.containedParticles++;
+        }
+    }
+    if (this.song.paused && this.containedParticles > this.minVolume){
+        this.song.play();
+        song.volume = this.containedParticles /(this.maxVolume + this.minVolume);
+    }else if(!this.song.paused && this.containedParticles >= this.maxVolume){
+        song.volume = 1.0;
+    }else if(!this.song.paused && this.containedParticles > this.minVolume){
+        song.volume = this.containedParticles /(this.maxVolume + this.minVolume);
+    }else if(!this.song.paused){
+        song.pause();
+    }else if (this.containedParticles > this.minVolume){
+        song.play();
+    }else if(this.containedParticles < this.minVolume){
+        song.pause();
+    }
     
+}
+
+SongNode.prototype.drawAnalyserCircle = function (){
+    //TODO: draws circle that "beats" to the song intensity.
+}
+
+
+function addNewParticles() {
     // if at max, stop emitting.
     if (particles.length > getMaxP()) return;
 
     for (var i = 0; i < emitters.length; i++) {
-
         // emit emissionRate particles and put in array
         for (var j = 0; j < getEmissionRate(); j++) {
             particles.push(emitters[i].emitParticle());
@@ -315,7 +386,6 @@ function plotParticles(boundsX, boundsY) {
 
         // update velocities and accelerations
         particle.applyFields(fields);
-
         //self explanatory
         particle.move();
 
@@ -325,6 +395,11 @@ function plotParticles(boundsX, boundsY) {
 
     // update global particle reference
     particles = currentParticles;
+
+    for(var i = 0; i < songNodes.length; i++){
+        var node = songNodes[i];
+        node.calcSongState(particles);
+    }
 }
 
 function drawParticles() {
@@ -350,37 +425,84 @@ function removeObject(){
             var p = emitters[i];
             if(isMouseOver(p)){
                 emitters.splice(i,1);
-                foundObject = false;
+                foundObject = true;
             }
         }
+        if(!foundObject){
+            for(var i = 0; i < songNodes.length; i++){
+                var p = songNodes[i];
+                if(isMouseOver(p)){
+                    songNodes.splice(i,1);
+                    foundObject = true;
+                }
+            }
+        }
+        foundObject = false;
     }
-    foundObject = false;
 }
 
-function getObject(){
-    if(modifyRequest && selectedObject === null){
+function getHoveredObject(){
+    if(modifyRequest  && selectedObject === null){
         for(var i = 0; i < fields.length; i++){
             var p = fields[i];
             if(isMouseOver(p)){
                 selectedObject = p;
+                foundObject = true
             }
         }
-        for(var i = 0; i < emitters.length; i++){
-            var p = emitters[i];
-            if(isMouseOver(p)){
-                selectedObject = p;
+        if(!foundObject){
+            for(var i = 0; i < emitters.length; i++){
+                var p = emitters[i];
+                if(isMouseOver(p)){
+                    selectedObject = p;
+                    foundObject = true;
+                }
+            }
+            if(!foundObject){
+                for(var i = 0; i < songNodes.length; i++){
+                    var p = songNodes[i];
+                    if(isMouseOver(p)){
+                        selectedObject = p;
+                        foundObject = true;
+                    }
+                }
             }
         }
+        foundObject = false;
         return selectedObject;
     }else{
         return selectedObject;
     }
 }
 
+function radialDistance(deltaX,deltaY){
+    return Math.sqrt(deltaX*deltaX + deltaY*deltaY);
+}
+
+function dynamicHintCircle(x,y,radius){
+    ctx.fillStyle =  "rgba(67, 183, 222, 0.4)";
+    ctx.beginPath();
+    ctx.arc(x,y,radius,0, Math.PI *2);
+    ctx.closePath();
+    ctx.fill();
+}
+
+function staticHintCircle (object){
+    ctx.fillStyle =  "rgba(67, 183, 222, 0.2)";
+    ctx.beginPath();
+    if(modifyRequest && getHoveredObject() != null && object.position === getHoveredObject().position){
+        object.position.x = mouseXPos;
+        object.position.y = mouseYPos;
+    }
+    ctx.arc(object.position.x, object.position.y, object.radius, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.fill();
+}
+
 function drawCircle(object) {
     ctx.fillStyle = object.drawColor;
     ctx.beginPath();
-    if(modifyRequest && object.position === getObject().position){
+    if(modifyRequest && getHoveredObject() != null && object.position === getHoveredObject().position){
         object.position.x = mouseXPos;
         object.position.y = mouseYPos;
     }
@@ -421,12 +543,18 @@ function update() {
 }
 
 function draw() {
-    drawParticles();
+    if(circleRequested){
+        dynamicHintCircle(eX,eY,radialDistance(mouseXPos - eX, mouseYPos - eY));
+    }
+    songNodes.forEach(drawCircle);
     fields.forEach(drawCircle);
     emitters.forEach(drawCircle);
+    songNodes.forEach(staticHintCircle);
     if(lineRequested){
        drawLine();
     }
+    drawParticles();
+
 }
 
 function queue() {
