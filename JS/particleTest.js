@@ -9,11 +9,6 @@ var emitters = [];
 var fields = [];
 var songNodes = [];
 
-var midX = Math.floor($("canvas").width()/2);
-var midY = $("canvas").height()/2;
-
-var song = document.getElementById("song");
-
 var eX, eY;
 var scrollHeightOffset;
 
@@ -29,6 +24,7 @@ var lineRequested;
 var circleRequested;
 var modifyRequest;
 var foundObject;
+var audioNumber = 1;
 var selectedObject = null;
 var mode = "add"; 
 
@@ -52,6 +48,7 @@ $( "html" ).keypress(function( event ) {
     }else{
        onClickType = 0;
        lineRequested = false;
+       circleRequested = false;
     }
     updateDropdown();
   }
@@ -64,13 +61,26 @@ $("#fieldDropdown li").on('click','a',  function(e){
     $("#charge").empty().append(type);
     if(type == "Positive"){
         onClickType = 0;
+        lineRequested = false;
+        circleRequested = false;
     }else if(type == "Negative"){
         onClickType = 1;
+        lineRequested = false;
+        circleRequested = false;
     }else if(type == "Emitter"){
         onClickType = 2;
+        circleRequested = false;
     }else if (type == "Song Node"){
         onClickType = 3;
+        lineRequested = false;
     }
+    
+});
+
+$("#songNames li").on('click','a',  function(e){
+    e.preventDefault();
+    var type = $(this).html()
+    $("#song").empty().append(type);
 });
 
 $("#Instructions-Label").on('click', function (e) {
@@ -113,6 +123,12 @@ $("canvas").click(function(e){
                 circleRequested = true;
             }else{
                 circleRequested = false;
+                var song = document.createElement('audio');
+                song.loop = true;
+                song.id = "song" + audioNumber;
+                audioNumber++;
+                song.src = getAudioFile();
+                console.log(song.src + " " + song.id);
                 songNodes.push(new SongNode(new Vector(eX,eY), song, radialDistance(e.clientX - eX, e.clientY - eY)));
             }
         }
@@ -321,8 +337,8 @@ function SongNode(point, audioElement , radius, minVolume, maxVolume){
     this.position = point;//coordinate
     this.song = audioElement;// file path for audio file
     this.radius = radius;
-    this.minVolume = minVolume || 400; //number of particles for the file to play.
-    this.maxVolume = maxVolume || 5000; //number of particles needed for max volume
+    this.minVolume = minVolume || 0; //number of particles for the file to play.
+    this.maxVolume = maxVolume || 10000; //number of particles needed for max volume
     this.containedParticles = 0;
     this.drawColor = "orange";
 }
@@ -337,19 +353,19 @@ SongNode.prototype.calcSongState = function(particles){
             this.containedParticles++;
         }
     }
+
+    var volume = this.containedParticles / (this.maxVolume + this.minVolume);
+    if(volume >= 1.0){volume = 1.0}
+
     if (this.song.paused && this.containedParticles > this.minVolume){
         this.song.play();
-        song.volume = this.containedParticles /(this.maxVolume + this.minVolume);
-    }else if(!this.song.paused && this.containedParticles >= this.maxVolume){
-        song.volume = 1.0;
+        this.song.volume = volume;
     }else if(!this.song.paused && this.containedParticles > this.minVolume){
-        song.volume = this.containedParticles /(this.maxVolume + this.minVolume);
-    }else if(!this.song.paused){
-        song.pause();
+        this.song.volume = volume;
+    }else if(!this.song.paused || this.containedParticles < this.minVolume){
+        this.song.pause();
     }else if (this.containedParticles > this.minVolume){
-        song.play();
-    }else if(this.containedParticles < this.minVolume){
-        song.pause();
+        this.song.play();
     }
     
 }
@@ -417,7 +433,6 @@ function removeObject(){
         if(isMouseOver(p)){
             fields.splice(i,1);
             foundObject = true;
-
         }
     }
     if(!foundObject){
@@ -432,13 +447,42 @@ function removeObject(){
             for(var i = 0; i < songNodes.length; i++){
                 var p = songNodes[i];
                 if(isMouseOver(p)){
+                    $("#" + p.song.id).remove();
+                    p.song.pause();
+                    console.log(p.song.id);
                     songNodes.splice(i,1);
                     foundObject = true;
                 }
             }
         }
-        foundObject = false;
+        
     }
+    foundObject = false;
+}
+
+function getAudioFile(){
+    var song = document.getElementById("song");
+    var text = song.textContent || song.innerText; //Thanks for being different IE
+    var nameEnd;
+    var skip;
+    var fileName = new String();
+    var lastFirstLetter = 0;
+    for(var i = 0; i < text.length; i++){
+        var cur = text.charAt(i);
+        if(cur === " " && !skip){
+            fileName += text.substring(lastFirstLetter, i);
+            lastFirstLetter = i + 1;
+        }else if (cur === "-"){
+            fileName += "_";
+            lastFirstLetter = i + 2;
+            skip = true;
+        }else if(i === text.length - 1){
+            fileName += text.substring(lastFirstLetter, i + 1);
+        }else{
+            skip = false;
+        }
+    }
+    return "Songs/" + fileName + ".mp3";
 }
 
 function getHoveredObject(){

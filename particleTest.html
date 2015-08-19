@@ -8,9 +8,8 @@
   </head>
   <body>	
 
-  	<audio id="song" src="Songs/bNow.mp3 " preload="auto">
-  		<p>Your browser does not support the <code> audio </code> element</p>
-  	</audio>
+  	<audio id = "bNow" src = "Songs/BeautifulNow_Zedd.mp3" loop></audio>
+
   	<div class="mode">
 		Current mode: add
 	</div>
@@ -24,8 +23,8 @@
   	</div>
 
 	<div class="Particle-menu">
-		<h1> <em><strong>Particle System</strong></em></h1>
-		<h2 id="Instructions-Label">Instructions &#8595</h2>
+		<h1> <em><strong>Particle Mashup</strong></em></h1>
+		<h2 id="Instructions-Label">Instructions <span class="caret"></span></h2>
 		<div class="Instructions">
 			<ol>
 				<li>Press a to switch to add mode</li>
@@ -35,6 +34,21 @@
 				<li>Press c to cycle through types</li>
 			</ol>
 		</div>
+		<h3>Song:
+		 	<div id="songDrop" class="dropdown">
+			  <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+			    <span id="song">Beautiful Now - Zedd</span>
+			    <span class="caret"></span>
+			  </button>
+			  <ul id = "songNames" class="dropdown-menu" aria-labelledby="dropdownMenu1">
+			    <li><a href="#">Beautiful Now - Zedd</a></li>
+			    <li><a href="#">The Girl - Hellberg</a></li>
+			    <li><a href="#">Gold - Chet Faker</a></li>
+			    <li><a href="#">Waste of Time - MO</a></li>
+			  </ul>
+			</div>
+		</h3>
+
 		<h3>Type:
 		 	<div id="typeDrop" class="dropdown">
 			  <button class="btn btn-success dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
